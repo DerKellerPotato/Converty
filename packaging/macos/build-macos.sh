@@ -31,5 +31,13 @@ STAGE="$ROOT/target/macos/dmg"
 mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
-hdiutil create -volname "Converty $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+# hdiutil sometimes fails with "Resource busy" on CI machines; retry a few times.
+for attempt in 1 2 3 4 5; do
+    if hdiutil create -volname "Converty $VERSION" -srcfolder "$STAGE" -ov -format UDZO "$DMG"; then
+        break
+    fi
+    [ "$attempt" = 5 ] && exit 1
+    echo "hdiutil failed (attempt $attempt), retrying"
+    sleep $((attempt * 5))
+done
 echo "Built $ZIP and $DMG"
