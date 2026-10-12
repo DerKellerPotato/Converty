@@ -52,3 +52,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+      - name: Launch smoke test (app must stay up for 15 s)
+        shell: bash
+        run: |
+          cargo build -p converty
+          exe=target/debug/converty
+          [ -f "$exe.exe" ] && exe="$exe.exe"
+          "$exe" > smoke.log 2>&1 &
+          pid=$!
+          sleep 15
+          if kill -0 $pid 2>/dev/null; then
+            echo "Converty is running"; kill $pid || true
+          else
+            wait $pid; code=$?
+            echo "Converty exited early with code $code"; cat smoke.log; exit 1
+          fi
