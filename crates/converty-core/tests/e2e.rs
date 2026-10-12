@@ -1125,6 +1125,7 @@ fn f09_permission_bits() {
 
 /// F09 / security: the password never shows up in the command line of a child process.
 #[test]
+#[cfg(unix)] // Unix permissions / ps
 fn f09_passwords_are_not_visible_in_ps() {
     if !has("gs") || !Path::new("/proc/self/cmdline").exists() {
         return;
@@ -1583,6 +1584,7 @@ fn unicode_names_and_spaces_in_paths() {
 }
 
 #[test]
+#[cfg(unix)] // Unix permissions / ps
 fn output_dir_read_only_or_missing_gives_io_error() {
     use std::os::unix::fs::PermissionsExt;
     let root = out();
@@ -1625,6 +1627,7 @@ fn output_dir_read_only_or_missing_gives_io_error() {
 }
 
 #[test]
+#[cfg(unix)] // Unix permissions / ps
 fn output_dir_fills_up_midway_removes_partial_outputs() {
     // The folder turns read-only after the first output file of a multi-file job.
     use std::os::unix::fs::PermissionsExt;

@@ -32,7 +32,7 @@ jobs:
             deb: arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
       - name: Install system packages
@@ -71,7 +71,7 @@ jobs:
           chmod +x appimagetool
           APPIMAGE_EXTRACT_AND_RUN=1 APPIMAGETOOL="$PWD/appimagetool" SKIP_BUILD=1 ARCH="$A" packaging/appimage/build-appimage.sh
           ls -la dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: linux-${{ matrix.arch }}
           path: dist/*
@@ -83,14 +83,14 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
       options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
       - name: Generate cargo sources
         run: |
           curl -fsSL -o /tmp/flatpak-cargo-generator.py \
             https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
-          python3 -m pip install --break-system-packages aiohttp toml 2>/dev/null || python3 -m pip install aiohttp toml
+          python3 -m pip install --break-system-packages aiohttp tomlkit 2>/dev/null || python3 -m pip install aiohttp tomlkit
           python3 /tmp/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
       - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
         with:
@@ -103,7 +103,7 @@ jobs:
           V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
           mkdir -p dist
           mv Converty-x86_64.flatpak "dist/Converty-$V-x86_64.flatpak"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: flatpak
           path: dist/*
@@ -113,26 +113,26 @@ jobs:
     runs-on: ubuntu-24.04
     container: archlinux:base-devel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
       - name: Build with makepkg
         run: |
           set -euo pipefail
           pacman -Syu --noconfirm --needed rust git ghostscript poppler libxkbcommon
-          git config --global --add safe.directory "$PWD"
           V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
           useradd -m builder
           mkdir -p /home/builder/pkg dist
           cp packaging/arch/PKGBUILD /home/builder/pkg/
           sed -i "s/^pkgver=.*/pkgver=$V/" /home/builder/pkg/PKGBUILD
           # Use this checkout as the source tarball (makepkg skips the download when the file exists).
-          git archive --prefix="Converty-$V/" -o "/home/builder/pkg/converty-$V.tar.gz" HEAD
+          tar --exclude=./.git --exclude=./target --transform "s,^\.,Converty-$V," \
+            -czf "/home/builder/pkg/converty-$V.tar.gz" .
           chown -R builder /home/builder/pkg
           su builder -c "cd /home/builder/pkg && makepkg --nodeps --nocheck"
           cp /home/builder/pkg/*.pkg.tar.zst dist/
           ls -la dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: arch
           path: dist/*
@@ -141,7 +141,7 @@ jobs:
     name: Windows x64
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
       - uses: dtolnay/rust-toolchain@stable
@@ -153,7 +153,7 @@ jobs:
       - name: Build and package
         shell: pwsh
         run: packaging\windows\build-windows.ps1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: windows
           path: dist/*
@@ -162,7 +162,7 @@ jobs:
     name: macOS universal
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
       - uses: dtolnay/rust-toolchain@stable
@@ -171,7 +171,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Build and package
         run: packaging/macos/build-macos.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: macos
           path: dist/*
@@ -182,10 +182,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true

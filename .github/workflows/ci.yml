@@ -14,7 +14,7 @@ jobs:
     name: Linux (clippy + tests)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install system packages
         run: |
           sudo apt-get update
@@ -42,7 +42,7 @@ jobs:
             os: macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Ghostscript and Poppler
         if: runner.os == 'macOS'
         run: brew install ghostscript poppler

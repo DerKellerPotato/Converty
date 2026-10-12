@@ -91,13 +91,11 @@
                         ".git",
                         "target",
                         "flatpak",
-                        "replica"
+                        "replica",
+                        "dist"
                     ]
                 },
-                {
-                    "type": "file",
-                    "path": "cargo-sources.json"
-                }
+                "cargo-sources.json"
             ]
         }
     ]
