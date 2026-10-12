@@ -10,7 +10,7 @@ depends=('ghostscript' 'poppler' 'libxkbcommon' 'gcc-libs' 'glibc')
 optdepends=('libreoffice-fresh: Office and HTML conversions'
             'xdg-desktop-portal: native file dialogs')
 makedepends=('cargo' 'git')
-options=('!lto')
+options=('!lto' '!debug')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')
 
