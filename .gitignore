@@ -1,0 +1,7 @@
+target/
+dist/
+flatpak/cargo-sources.json
+flatpak/.flatpak-builder/
+build-dir/
+# Local planning notes, not part of the app
+replica/

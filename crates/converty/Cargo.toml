@@ -1,0 +1,66 @@
+[package]
+name = "converty"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Offline PDF toolbox: merge, split, compress, convert and sign PDF files"
+homepage = "https://github.com/DerKellerPotato/Converty"
+repository = "https://github.com/DerKellerPotato/Converty"
+authors.workspace = true
+readme = "../../README.md"
+
+[dependencies]
+converty-core = { path = "../converty-core" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+open = "5"
+url = "2"
+dirs = "6"
+
+# Linux: Wayland/X11, XDG portal file dialogs and D-Bus (file manager, COSMIC config).
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "03d7dcb832bc6d15bc1bb07327a1aa426b2d5bc0", default-features = false, features = ["winit", "wgpu", "wayland", "x11", "tokio", "multi-window", "xdg-portal", "dbus-config", "a11y", "about"] }
+
+# Windows and macOS: native file dialogs through rfd.
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "03d7dcb832bc6d15bc1bb07327a1aa426b2d5bc0", default-features = false, features = ["winit", "wgpu", "tokio", "multi-window", "rfd", "about"] }
+
+
+[build-dependencies]
+winresource = "0.1"
+
+[package.metadata.deb]
+name = "converty"
+maintainer = "DerKellerPotato <https://github.com/DerKellerPotato>"
+copyright = "Converty contributors"
+section = "utils"
+priority = "optional"
+depends = "$auto, ghostscript, poppler-utils"
+recommends = "libreoffice-core, xdg-desktop-portal"
+extended-description = "Converty merges, splits, compresses, converts, watermarks, signs and password-protects PDF files. Everything runs locally; nothing is uploaded."
+assets = [
+    ["target/release/converty", "usr/bin/", "755"],
+    ["../../res/io.github.converty.Converty.desktop", "usr/share/applications/", "644"],
+    ["../../res/io.github.converty.Converty.metainfo.xml", "usr/share/metainfo/", "644"],
+    ["../../res/icons/hicolor/scalable/apps/io.github.converty.Converty.svg", "usr/share/icons/hicolor/scalable/apps/", "644"],
+    ["../../res/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg", "usr/share/icons/hicolor/symbolic/apps/", "644"],
+]
+
+[package.metadata.generate-rpm]
+summary = "Offline PDF toolbox: merge, split, compress, convert and sign"
+assets = [
+    { source = "target/release/converty", dest = "/usr/bin/converty", mode = "755" },
+    { source = "../../res/io.github.converty.Converty.desktop", dest = "/usr/share/applications/io.github.converty.Converty.desktop", mode = "644" },
+    { source = "../../res/io.github.converty.Converty.metainfo.xml", dest = "/usr/share/metainfo/io.github.converty.Converty.metainfo.xml", mode = "644" },
+    { source = "../../res/icons/hicolor/scalable/apps/io.github.converty.Converty.svg", dest = "/usr/share/icons/hicolor/scalable/apps/io.github.converty.Converty.svg", mode = "644" },
+    { source = "../../res/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg", dest = "/usr/share/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg", mode = "644" },
+]
+
+[package.metadata.generate-rpm.requires]
+ghostscript = "*"
+poppler-utils = "*"
+
+[package.metadata.generate-rpm.recommends]
+libreoffice-core = "*"

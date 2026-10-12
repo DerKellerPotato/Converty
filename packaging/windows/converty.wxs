@@ -1,0 +1,37 @@
+<!-- WiX v5 source for the Converty MSI (Converty-<version>-windows-x64.msi).
+     Build: wix build -arch x64 -d Version=0.1.0 -d SourceDir=target\release packaging\windows\converty.wxs -o dist\Converty.msi -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Converty" Manufacturer="Converty contributors" Version="$(var.Version)"
+           UpgradeCode="3F7C2A91-8D4E-4B1A-A6C3-52E9F0B7D184" Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Converty is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="ConvertyIcon" SourceFile="packaging\windows\converty.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ConvertyIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/DerKellerPotato/Converty" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Converty">
+        <Component Id="MainExecutable">
+          <File Id="ConvertyExe" Source="$(var.SourceDir)\converty.exe" KeyPath="yes" />
+        </Component>
+        <Component Id="LicenseFile">
+          <File Id="LicenseTxt" Source="LICENSE" Name="LICENSE.txt" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut">
+        <Shortcut Id="ConvertyStartMenu" Name="Converty" Description="Offline PDF toolbox"
+                  Target="[INSTALLFOLDER]converty.exe" WorkingDirectory="INSTALLFOLDER" Icon="ConvertyIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Converty" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="Main">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="LicenseFile" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+</Wix>

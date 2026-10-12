@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = ["crates/converty-core", "crates/converty"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["DerKellerPotato"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[profile.release]
+lto = "thin"
+strip = true

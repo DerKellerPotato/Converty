@@ -1,0 +1,104 @@
+{
+    "app-id": "io.github.converty.Converty",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "25.08",
+    "sdk": "org.freedesktop.Sdk",
+    "sdk-extensions": [
+        "org.freedesktop.Sdk.Extension.rust-stable"
+    ],
+    "build-options": {
+        "append-path": "/usr/lib/sdk/rust-stable/bin",
+        "env": {
+            "CARGO_HOME": "/run/build/converty/cargo"
+        }
+    },
+    "command": "converty",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=wayland",
+        "--socket=fallback-x11",
+        "--device=dri",
+        "--filesystem=xdg-documents",
+        "--filesystem=xdg-download",
+        "--talk-name=org.freedesktop.FileManager1"
+    ],
+    "x-comment": "Ghostscript and Poppler are bundled. LibreOffice is not, so Office and HTML conversions are unavailable in the Flatpak build. cargo-sources.json is generated from Cargo.lock with flatpak-cargo-generator (https://github.com/flatpak/flatpak-builder-tools/tree/master/cargo) before building; CI does this automatically.",
+    "modules": [
+        {
+            "name": "ghostscript",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--disable-cups",
+                "--disable-dbus",
+                "--disable-gtk",
+                "--without-x",
+                "--without-tesseract"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10060/ghostscript-10.06.0.tar.xz",
+                    "sha256": "64352648c2c081c8a9fb1a12dc1965e01ead7c57f58b72d1b54f6ef1cef3c561"
+                }
+            ]
+        },
+        {
+            "name": "poppler",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DENABLE_UTILS=ON",
+                "-DENABLE_CPP=OFF",
+                "-DENABLE_GLIB=OFF",
+                "-DENABLE_QT5=OFF",
+                "-DENABLE_QT6=OFF",
+                "-DENABLE_LIBCURL=OFF",
+                "-DENABLE_BOOST=OFF",
+                "-DENABLE_NSS3=OFF",
+                "-DENABLE_LIBOPENJPEG=none",
+                "-DBUILD_GTK_TESTS=OFF",
+                "-DBUILD_QT5_TESTS=OFF",
+                "-DBUILD_QT6_TESTS=OFF",
+                "-DBUILD_CPP_TESTS=OFF",
+                "-DTESTDATADIR=OFF",
+                "-DENABLE_LCMS=OFF",
+                "-DENABLE_GPGME=OFF",
+                "-DENABLE_GOBJECT_INTROSPECTION=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://poppler.freedesktop.org/poppler-25.09.0.tar.xz",
+                    "sha256": "758abfe0c77108c72d654b291dfbce54964b5315a53028e3875f07ef55ff20a3"
+                }
+            ]
+        },
+        {
+            "name": "converty",
+            "buildsystem": "simple",
+            "build-commands": [
+                "cargo --offline build --release -p converty",
+                "install -Dm0755 target/release/converty /app/bin/converty",
+                "install -Dm0644 res/io.github.converty.Converty.desktop /app/share/applications/io.github.converty.Converty.desktop",
+                "install -Dm0644 res/io.github.converty.Converty.metainfo.xml /app/share/metainfo/io.github.converty.Converty.metainfo.xml",
+                "install -Dm0644 res/icons/hicolor/scalable/apps/io.github.converty.Converty.svg /app/share/icons/hicolor/scalable/apps/io.github.converty.Converty.svg",
+                "install -Dm0644 res/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg /app/share/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "..",
+                    "skip": [
+                        ".git",
+                        "target",
+                        "flatpak",
+                        "replica"
+                    ]
+                },
+                {
+                    "type": "file",
+                    "path": "cargo-sources.json"
+                }
+            ]
+        }
+    ]
+}

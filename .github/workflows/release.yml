@@ -1,0 +1,196 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  linux:
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            os: ubuntu-22.04
+            deb: amd64
+          - arch: aarch64
+            os: ubuntu-22.04-arm
+            deb: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libxkbcommon-dev libwayland-dev \
+            libfontconfig-dev libdbus-1-dev file desktop-file-utils
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deb,cargo-generate-rpm
+      - name: Build
+        run: cargo build --release -p converty
+      - name: Package
+        run: |
+          set -euo pipefail
+          V="${TAG#v}"
+          A="${{ matrix.arch }}"
+          mkdir -p dist
+          # tar.gz with the binary and desktop files, laid out like /usr
+          S="target/stage/converty-$V-linux-$A"
+          mkdir -p "$S"
+          install -Dm755 target/release/converty "$S/bin/converty"
+          install -Dm644 res/io.github.converty.Converty.desktop "$S/share/applications/io.github.converty.Converty.desktop"
+          install -Dm644 res/io.github.converty.Converty.metainfo.xml "$S/share/metainfo/io.github.converty.Converty.metainfo.xml"
+          install -Dm644 res/icons/hicolor/scalable/apps/io.github.converty.Converty.svg "$S/share/icons/hicolor/scalable/apps/io.github.converty.Converty.svg"
+          install -Dm644 res/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg "$S/share/icons/hicolor/symbolic/apps/io.github.converty.Converty-symbolic.svg"
+          cp LICENSE README.md "$S/"
+          tar -C target/stage -czf "dist/converty-$V-linux-$A.tar.gz" "converty-$V-linux-$A"
+          # .deb and .rpm
+          cargo deb -p converty --no-build -o "dist/converty_${V}_${{ matrix.deb }}.deb"
+          cargo generate-rpm -p crates/converty -o "dist/converty-$V.$A.rpm"
+          # AppImage
+          curl -fsSL -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$A.AppImage"
+          chmod +x appimagetool
+          APPIMAGE_EXTRACT_AND_RUN=1 APPIMAGETOOL="$PWD/appimagetool" SKIP_BUILD=1 ARCH="$A" packaging/appimage/build-appimage.sh
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: dist/*
+
+  flatpak:
+    name: Flatpak
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Generate cargo sources
+        run: |
+          curl -fsSL -o /tmp/flatpak-cargo-generator.py \
+            https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
+          python3 -m pip install --break-system-packages aiohttp toml 2>/dev/null || python3 -m pip install aiohttp toml
+          python3 /tmp/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
+      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: Converty-${{ env.TAG }}-x86_64.flatpak
+          manifest-path: flatpak/io.github.converty.Converty.json
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: false
+      - name: Rename bundle
+        run: |
+          mkdir -p dist
+          mv "Converty-$TAG-x86_64.flatpak" "dist/Converty-${TAG#v}-x86_64.flatpak"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flatpak
+          path: dist/*
+
+  arch:
+    name: Arch Linux package
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Build with makepkg
+        run: |
+          set -euo pipefail
+          pacman -Syu --noconfirm --needed rust git ghostscript poppler libxkbcommon
+          useradd -m builder
+          mkdir -p /home/builder/pkg dist
+          cp packaging/arch/PKGBUILD /home/builder/pkg/
+          sed -i "s/^pkgver=.*/pkgver=${TAG#v}/" /home/builder/pkg/PKGBUILD
+          chown -R builder /home/builder/pkg
+          su builder -c "cd /home/builder/pkg && makepkg --nodeps --nocheck"
+          cp /home/builder/pkg/*.pkg.tar.zst dist/
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch
+          path: dist/*
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Inno Setup and WiX
+        run: |
+          choco install innosetup -y --no-progress
+          dotnet tool install --global wix --version 5.0.2
+      - name: Build and package
+        shell: pwsh
+        run: packaging\windows\build-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  macos:
+    name: macOS universal
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - name: Build and package
+        run: packaging/macos/build-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  publish:
+    name: Publish release
+    needs: [linux, flatpak, arch, windows, macos]
+    if: ${{ !cancelled() && needs.linux.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd artifacts
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Converty ${{ env.TAG }}
+          body_path: .github/release-notes.md
+          files: artifacts/*

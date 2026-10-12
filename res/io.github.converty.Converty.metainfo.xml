@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.converty.Converty</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Converty</name>
+  <summary>Offline PDF toolbox: merge, split, compress, convert and sign</summary>
+  <developer id="io.github.converty">
+    <name>Converty contributors</name>
+  </developer>
+  <description>
+    <p>
+      Converty is an offline, open-source PDF toolbox with a COSMIC look for Linux, Windows and macOS.
+      It brings the tools you usually reach for in online PDF services to your desktop,
+      and every file is processed locally: nothing is uploaded, nothing leaves your machine.
+    </p>
+    <p>Tools included:</p>
+    <ul>
+      <li>Merge and split PDF files</li>
+      <li>Remove, extract and organize pages</li>
+      <li>Compress and repair PDF files</li>
+      <li>Convert images, Office documents and HTML to PDF</li>
+      <li>Convert PDF to images, Office documents and PDF/A</li>
+      <li>Rotate pages, add page numbers, watermarks and crop</li>
+      <li>Sign, protect with a password and unlock PDF files</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.converty.Converty.desktop</launchable>
+  <provides>
+    <binary>converty</binary>
+  </provides>
+  <url type="homepage">https://github.com/DerKellerPotato/Converty</url>
+  <categories>
+    <category>Office</category>
+    <category>Utility</category>
+  </categories>
+  <keywords>
+    <keyword>PDF</keyword>
+    <keyword>merge</keyword>
+    <keyword>split</keyword>
+    <keyword>compress</keyword>
+    <keyword>convert</keyword>
+    <keyword>sign</keyword>
+  </keywords>
+  <content_rating type="oars-1.1"/>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <recommends>
+    <display_length compare="ge">768</display_length>
+  </recommends>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <releases>
+    <release version="0.1.0" date="2026-10-12">
+      <description>
+        <p>First public release with merge, split, page tools, compression, conversion, watermarking, signing and password protection.</p>
+      </description>
+    </release>
+  </releases>
+</component>

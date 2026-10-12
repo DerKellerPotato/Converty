@@ -1,0 +1,44 @@
+# Maintainer: DerKellerPotato <https://github.com/DerKellerPotato>
+pkgname=converty
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Offline PDF toolbox: merge, split, compress, convert and sign PDF files"
+arch=('x86_64' 'aarch64')
+url="https://github.com/DerKellerPotato/Converty"
+license=('GPL-3.0-or-later')
+depends=('ghostscript' 'poppler' 'libxkbcommon' 'gcc-libs' 'glibc')
+optdepends=('libreoffice-fresh: Office and HTML conversions'
+            'xdg-desktop-portal: native file dialogs')
+makedepends=('cargo' 'git')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+    cd "Converty-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd "Converty-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release -p converty
+}
+
+check() {
+    cd "Converty-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --frozen --release -p converty-core
+}
+
+package() {
+    cd "Converty-$pkgver"
+    local id=io.github.converty.Converty
+    install -Dm0755 target/release/converty "$pkgdir/usr/bin/converty"
+    install -Dm0644 "res/$id.desktop" "$pkgdir/usr/share/applications/$id.desktop"
+    install -Dm0644 "res/$id.metainfo.xml" "$pkgdir/usr/share/metainfo/$id.metainfo.xml"
+    install -Dm0644 "res/icons/hicolor/scalable/apps/$id.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/$id.svg"
+    install -Dm0644 "res/icons/hicolor/symbolic/apps/$id-symbolic.svg" "$pkgdir/usr/share/icons/hicolor/symbolic/apps/$id-symbolic.svg"
+}

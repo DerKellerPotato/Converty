@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Converty
+GenericName=PDF Toolbox
+Comment=Merge, split, compress, convert and sign PDF files offline
+Exec=converty %F
+Icon=io.github.converty.Converty
+Terminal=false
+Categories=Office;Utility;
+MimeType=application/pdf;image/jpeg;image/png;
+Keywords=pdf;merge;split;compress;convert;rotate;watermark;sign;
+StartupNotify=true
+StartupWMClass=io.github.converty.Converty
