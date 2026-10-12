@@ -260,7 +260,10 @@ pub(crate) fn write_unique(
     write: impl FnOnce(&Path) -> Result<()>,
 ) -> Result<PathBuf> {
     // The name is user input: it must stay a single file name inside `dir`.
-    let stem: String = stem.chars().map(|c| if matches!(c, '/' | '\0') { '_' } else { c }).collect();
+    let stem: String = stem.chars().map(|c| if forbidden_in_name(c) { '_' } else { c }).collect();
+    // Windows drops trailing dots and spaces from names.
+    #[cfg(windows)]
+    let stem = stem.trim_end_matches(['.', ' ']).to_string();
     let stem = if stem.trim().is_empty() { "output" } else { stem.as_str() };
     let tmp = tempfile::Builder::new().prefix(".converty-").suffix(".part").tempfile_in(dir)?;
     write(tmp.path())?;
@@ -283,4 +286,13 @@ pub(crate) fn write_unique(
 
 pub(crate) fn file_stem(p: &Path) -> String {
     p.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "output".into())
+}
+
+/// Characters that cannot appear in a file name on this system.
+fn forbidden_in_name(c: char) -> bool {
+    if cfg!(windows) {
+        matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') || c.is_control()
+    } else {
+        matches!(c, '/' | '\0')
+    }
 }

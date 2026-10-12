@@ -1539,9 +1539,13 @@ fn unicode_names_and_spaces_in_paths() {
     let outd = root.path().join("Ausgabe (neu) 100%");
     std::fs::create_dir_all(&outd).unwrap();
     let f = fx();
-    let names = ["Büro Rechnung März – final (2).pdf", "50% off & more #1.pdf", "日本語のファイル.pdf", "it's \"quoted\".pdf", "-leading dash.pdf", "tab\tname.pdf"];
+    let mut names = vec!["Büro Rechnung März – final (2).pdf", "50% off & more #1.pdf", "日本語のファイル.pdf", "-leading dash.pdf"];
+    if cfg!(unix) {
+        // not allowed in Windows file names
+        names.extend(["it's \"quoted\".pdf", "tab\tname.pdf"]);
+    }
     let mut copies = Vec::new();
-    for n in names {
+    for n in &names {
         let p = dir.join(n);
         std::fs::copy(&f.plain, &p).unwrap();
         copies.push(p);
