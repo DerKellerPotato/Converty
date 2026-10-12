@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)build, e.g. v0.1.0"
+        description: "Tag or branch to build. Only tag pushes publish a release; a manual run just uploads the packages as workflow artifacts."
         required: true
+        default: main
 
 permissions:
   contents: write
@@ -49,7 +50,7 @@ jobs:
       - name: Package
         run: |
           set -euo pipefail
-          V="${TAG#v}"
+          V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
           A="${{ matrix.arch }}"
           mkdir -p dist
           # tar.gz with the binary and desktop files, laid out like /usr
@@ -93,14 +94,15 @@ jobs:
           python3 /tmp/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
       - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
         with:
-          bundle: Converty-${{ env.TAG }}-x86_64.flatpak
+          bundle: Converty-x86_64.flatpak
           manifest-path: flatpak/io.github.converty.Converty.json
           cache-key: flatpak-builder-${{ github.sha }}
           upload-artifact: false
       - name: Rename bundle
         run: |
+          V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
           mkdir -p dist
-          mv "Converty-$TAG-x86_64.flatpak" "dist/Converty-${TAG#v}-x86_64.flatpak"
+          mv Converty-x86_64.flatpak "dist/Converty-$V-x86_64.flatpak"
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
@@ -118,10 +120,14 @@ jobs:
         run: |
           set -euo pipefail
           pacman -Syu --noconfirm --needed rust git ghostscript poppler libxkbcommon
+          git config --global --add safe.directory "$PWD"
+          V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
           useradd -m builder
           mkdir -p /home/builder/pkg dist
           cp packaging/arch/PKGBUILD /home/builder/pkg/
-          sed -i "s/^pkgver=.*/pkgver=${TAG#v}/" /home/builder/pkg/PKGBUILD
+          sed -i "s/^pkgver=.*/pkgver=$V/" /home/builder/pkg/PKGBUILD
+          # Use this checkout as the source tarball (makepkg skips the download when the file exists).
+          git archive --prefix="Converty-$V/" -o "/home/builder/pkg/converty-$V.tar.gz" HEAD
           chown -R builder /home/builder/pkg
           su builder -c "cd /home/builder/pkg && makepkg --nodeps --nocheck"
           cp /home/builder/pkg/*.pkg.tar.zst dist/
@@ -173,7 +179,7 @@ jobs:
   publish:
     name: Publish release
     needs: [linux, flatpak, arch, windows, macos]
-    if: ${{ !cancelled() && needs.linux.result == 'success' }}
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
