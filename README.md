@@ -7,7 +7,7 @@
 **An offline, open-source PDF toolbox for Linux, Windows and macOS.**
 
 Merge, split, compress, convert, watermark, sign and password-protect PDF files,
-without uploading a single page anywhere.
+and convert videos between MP4, MKV, WebM, MOV and AVI, without uploading anything.
 
 [![CI](https://github.com/DerKellerPotato/Converty/actions/workflows/ci.yml/badge.svg)](https://github.com/DerKellerPotato/Converty/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/DerKellerPotato/Converty?sort=semver)](https://github.com/DerKellerPotato/Converty/releases/latest)
@@ -34,6 +34,7 @@ Online PDF services are handy, but they mean sending your contracts, invoices an
 | **Convert from PDF** | PDF to JPG/PNG (or extract embedded images) · PDF to Word, ODT, Excel or PowerPoint · PDF to PDF/A (1b, 2b, 3b) |
 | **Edit** | Rotate pages · Add page numbers · Add text or image watermarks · Crop pages |
 | **Security** | Sign with a typed name or a signature image · Protect with a password and permissions · Unlock |
+| **Video** | Convert video (MP4, MKV, WebM, MOV, AVI; keeps streams unchanged when they fit, optional quality and resolution) · Video to audio (MP3, M4A, WAV, FLAC, Opus) |
 
 And around the tools:
 
@@ -67,6 +68,7 @@ Converty does the PDF work itself where it can (merge, split, pages, rotate, cro
 | [Ghostscript](https://ghostscript.com/) | Compress, PDF/A, Protect, Unlock |
 | [Poppler](https://poppler.freedesktop.org/) (`pdftoppm`, `pdfimages`) | Page thumbnails, PDF to images |
 | [LibreOffice](https://www.libreoffice.org/) | Office and HTML conversions (optional) |
+| [FFmpeg](https://ffmpeg.org/) (`ffmpeg`, `ffprobe`) | Video conversion and audio extraction (optional) |
 
 <details>
 <summary><b>Linux</b></summary>
@@ -75,14 +77,14 @@ The `.deb`, `.rpm` and Arch packages pull in Ghostscript and Poppler automatical
 
 ```sh
 # Debian / Ubuntu / Pop!_OS
-sudo apt install ghostscript poppler-utils libreoffice-core
+sudo apt install ghostscript poppler-utils libreoffice-core ffmpeg
 # Fedora
-sudo dnf install ghostscript poppler-utils libreoffice-core
+sudo dnf install ghostscript poppler-utils libreoffice-core ffmpeg-free
 # Arch
-sudo pacman -S ghostscript poppler libreoffice-fresh
+sudo pacman -S ghostscript poppler libreoffice-fresh ffmpeg
 ```
 
-The Flatpak bundles Ghostscript and Poppler. LibreOffice is not included there, so Office and HTML conversions are not available in the Flatpak build.
+The Flatpak bundles Ghostscript and Poppler, and its runtime already contains FFmpeg. LibreOffice is not included there, so Office and HTML conversions are not available in the Flatpak build.
 
 </details>
 
@@ -92,10 +94,10 @@ The Flatpak bundles Ghostscript and Poppler. LibreOffice is not included there, 
 Install with [winget](https://learn.microsoft.com/windows/package-manager/):
 
 ```powershell
-winget install ArtifexSoftware.GhostScript oschwartz10612.Poppler TheDocumentFoundation.LibreOffice
+winget install ArtifexSoftware.GhostScript oschwartz10612.Poppler TheDocumentFoundation.LibreOffice Gyan.FFmpeg
 ```
 
-Or download them by hand: [Ghostscript](https://ghostscript.com/releases/gsdnld.html), [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases) and [LibreOffice](https://www.libreoffice.org/download/). Converty finds Ghostscript and LibreOffice in their default install folders. Poppler is found on `PATH` or in `C:\poppler\Library\bin`.
+Or download them by hand: [Ghostscript](https://ghostscript.com/releases/gsdnld.html), [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases), [LibreOffice](https://www.libreoffice.org/download/) and [FFmpeg](https://www.gyan.dev/ffmpeg/builds/). Converty finds Ghostscript and LibreOffice in their default install folders. Poppler is found on `PATH` or in `C:\poppler\Library\bin`, FFmpeg on `PATH` or in `C:\ffmpeg\bin`.
 
 Windows SmartScreen may warn about the installer because it is not code-signed. Choose **More info → Run anyway**.
 
@@ -108,6 +110,7 @@ Install the helpers with [Homebrew](https://brew.sh/):
 
 ```sh
 brew install ghostscript poppler
+brew install ffmpeg               # optional, for the video tools
 brew install --cask libreoffice   # optional, for Office conversions
 ```
 
@@ -144,7 +147,7 @@ Packaging scripts for every release format live in [`packaging/`](packaging) and
 ### Project layout
 
 ```
-crates/converty-core   PDF engine: every tool, options, page ranges, helper detection (no GUI)
+crates/converty-core   Engine: every PDF and video tool, options, page ranges, helper detection (no GUI)
 crates/converty        libcosmic desktop app
 res/                   desktop entry, AppStream metainfo, icons
 packaging/             AppImage, Windows (Inno Setup, WiX), macOS bundle, Arch PKGBUILD
@@ -157,7 +160,7 @@ flatpak/               Flatpak manifest
 cargo test --workspace
 ```
 
-The suite covers each tool end to end, including odd inputs (damaged files, Unicode paths, awkward passwords, cancellation, 200-page documents). Tests that need Ghostscript, Poppler or LibreOffice skip themselves when the program is missing. Set `CONVERTY_TEST_SOFFICE=1` to also run the slow LibreOffice tests.
+The suite covers each tool end to end, including odd inputs (damaged files, Unicode paths, awkward passwords, cancellation, 200-page documents). Tests that need Ghostscript, Poppler, LibreOffice or FFmpeg skip themselves when the program is missing. Set `CONVERTY_TEST_SOFFICE=1` to also run the slow LibreOffice tests.
 
 ## Releasing
 

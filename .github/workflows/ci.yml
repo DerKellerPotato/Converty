@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends pkg-config libxkbcommon-dev libwayland-dev \
             libfontconfig-dev libdbus-1-dev ghostscript poppler-utils libreoffice-core libreoffice-writer \
-            libreoffice-calc libreoffice-impress
+            libreoffice-calc libreoffice-impress ffmpeg
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -43,9 +43,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-      - name: Install Ghostscript and Poppler
+      - name: Install Ghostscript, Poppler and FFmpeg
         if: runner.os == 'macOS'
-        run: brew install ghostscript poppler
+        run: brew install ghostscript poppler ffmpeg
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy

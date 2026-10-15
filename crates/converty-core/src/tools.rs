@@ -9,16 +9,18 @@ pub enum Category {
     ConvertFromPdf,
     Edit,
     Security,
+    Video,
 }
 
 impl Category {
-    pub const ALL: [Category; 6] = [
+    pub const ALL: [Category; 7] = [
         Category::Organize,
         Category::Optimize,
         Category::ConvertToPdf,
         Category::ConvertFromPdf,
         Category::Edit,
         Category::Security,
+        Category::Video,
     ];
 
     pub fn label(self) -> &'static str {
@@ -29,6 +31,7 @@ impl Category {
             Category::ConvertFromPdf => "Convert from PDF",
             Category::Edit => "Edit",
             Category::Security => "Security",
+            Category::Video => "Video",
         }
     }
 }
@@ -56,6 +59,8 @@ pub enum Tool {
     Sign,
     Unlock,
     Protect,
+    ConvertVideo,
+    VideoToAudio,
 }
 
 #[derive(Debug, Clone)]
@@ -72,7 +77,7 @@ pub struct ToolMeta {
     pub min_files: usize,
     /// Whether more than one input file is allowed.
     pub multi: bool,
-    /// External programs needed ("gs", "soffice", "pdftoppm"). Empty = pure Rust.
+    /// External programs needed ("gs", "soffice", "pdftoppm", "ffmpeg"). Empty = pure Rust.
     pub needs: &'static [&'static str],
 }
 
@@ -100,6 +105,8 @@ pub fn tools() -> &'static [ToolMeta] {
         ToolMeta { tool: Tool::Sign, category: Category::Edit, name: "Sign PDF", blurb: "Place a typed or image signature on a page.", icon: "document-edit-symbolic", accepts: PDF, min_files: 1, multi: false, needs: &[] },
         ToolMeta { tool: Tool::Unlock, category: Category::Security, name: "Unlock PDF", blurb: "Remove the password from a PDF you can open.", icon: "changes-allow-symbolic", accepts: PDF, min_files: 1, multi: false, needs: &["gs"] },
         ToolMeta { tool: Tool::Protect, category: Category::Security, name: "Protect PDF", blurb: "Lock a PDF with a password and permissions.", icon: "changes-prevent-symbolic", accepts: PDF, min_files: 1, multi: false, needs: &["gs"] },
+        ToolMeta { tool: Tool::ConvertVideo, category: Category::Video, name: "Convert video", blurb: "Turn MKV, MP4, WebM, MOV or AVI into another format.", icon: "video-x-generic-symbolic", accepts: &[Video], min_files: 1, multi: true, needs: &["ffmpeg", "ffprobe"] },
+        ToolMeta { tool: Tool::VideoToAudio, category: Category::Video, name: "Video to audio", blurb: "Save the soundtrack as MP3, M4A, WAV, FLAC or Opus.", icon: "audio-x-generic-symbolic", accepts: &[Video], min_files: 1, multi: true, needs: &["ffmpeg", "ffprobe"] },
     ];
     TOOLS
 }

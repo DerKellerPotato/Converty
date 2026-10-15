@@ -38,7 +38,7 @@ copyright = "Converty contributors"
 section = "utils"
 priority = "optional"
 depends = "$auto, ghostscript, poppler-utils"
-recommends = "libreoffice-core, xdg-desktop-portal"
+recommends = "libreoffice-core, ffmpeg, xdg-desktop-portal"
 extended-description = "Converty merges, splits, compresses, converts, watermarks, signs and password-protects PDF files. Everything runs locally; nothing is uploaded."
 assets = [
     ["target/release/converty", "usr/bin/", "755"],
@@ -64,3 +64,4 @@ poppler-utils = "*"
 
 [package.metadata.generate-rpm.recommends]
 libreoffice-core = "*"
+ffmpeg = "*"

@@ -23,6 +23,7 @@
       <li>Convert PDF to images, Office documents and PDF/A</li>
       <li>Rotate pages, add page numbers, watermarks and crop</li>
       <li>Sign, protect with a password and unlock PDF files</li>
+      <li>Convert videos between MP4, MKV, WebM, MOV and AVI, or save their sound as audio</li>
     </ul>
   </description>
   <launchable type="desktop-id">io.github.converty.Converty.desktop</launchable>
@@ -41,6 +42,7 @@
     <keyword>compress</keyword>
     <keyword>convert</keyword>
     <keyword>sign</keyword>
+    <keyword>video</keyword>
   </keywords>
   <content_rating type="oars-1.1"/>
   <requires>
@@ -54,6 +56,11 @@
     <control>pointing</control>
   </supports>
   <releases>
+    <release version="0.2.0" date="2026-10-15">
+      <description>
+        <p>New video tools: convert videos between MP4, MKV, WebM, MOV and AVI, and save the sound of a video as MP3, M4A, WAV, FLAC or Opus. Needs FFmpeg.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-10-12">
       <description>
         <p>First public release with merge, split, page tools, compression, conversion, watermarking, signing and password protection.</p>

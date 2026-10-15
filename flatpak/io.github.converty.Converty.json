@@ -20,9 +20,10 @@
         "--device=dri",
         "--filesystem=xdg-documents",
         "--filesystem=xdg-download",
+        "--filesystem=xdg-videos",
         "--talk-name=org.freedesktop.FileManager1"
     ],
-    "x-comment": "Ghostscript and Poppler are bundled. LibreOffice is not, so Office and HTML conversions are unavailable in the Flatpak build. cargo-sources.json is generated from Cargo.lock with flatpak-cargo-generator (https://github.com/flatpak/flatpak-builder-tools/tree/master/cargo) before building; CI does this automatically.",
+    "x-comment": "Ghostscript and Poppler are bundled; FFmpeg comes with the runtime. LibreOffice is not, so Office and HTML conversions are unavailable in the Flatpak build. cargo-sources.json is generated from Cargo.lock with flatpak-cargo-generator (https://github.com/flatpak/flatpak-builder-tools/tree/master/cargo) before building; CI does this automatically.",
     "modules": [
         {
             "name": "ghostscript",

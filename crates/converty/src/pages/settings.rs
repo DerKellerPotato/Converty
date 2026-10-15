@@ -14,6 +14,8 @@ fn used_for(program: &str) -> &'static str {
         "pdftoppm" => "Thumbnails and PDF to images",
         "pdfimages" => "Pulling images out of a PDF",
         "soffice" => "Office and HTML conversions",
+        "ffmpeg" => "Video conversion and audio extraction",
+        "ffprobe" => "Reading video files",
         _ => "Some tools",
     }
 }

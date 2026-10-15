@@ -1,6 +1,6 @@
 # Maintainer: DerKellerPotato <https://github.com/DerKellerPotato>
 pkgname=converty
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Offline PDF toolbox: merge, split, compress, convert and sign PDF files"
 arch=('x86_64' 'aarch64')
@@ -8,6 +8,7 @@ url="https://github.com/DerKellerPotato/Converty"
 license=('GPL-3.0-or-later')
 depends=('ghostscript' 'poppler' 'libxkbcommon' 'gcc-libs' 'glibc')
 optdepends=('libreoffice-fresh: Office and HTML conversions'
+            'ffmpeg: video conversion and audio extraction'
             'xdg-desktop-portal: native file dialogs')
 makedepends=('cargo' 'git')
 options=('!lto' '!debug')

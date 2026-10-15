@@ -11,7 +11,7 @@ Converty is an offline PDF toolbox: merge, split, compress, convert, watermark, 
 | Arch Linux | `.pkg.tar.zst` |
 | Any Linux | `.AppImage`, `.flatpak` or `.tar.gz` |
 
-Some tools need Ghostscript, Poppler or LibreOffice. See [Helper programs](https://github.com/DerKellerPotato/Converty#helper-programs) for how to install them on each system.
+Some tools need Ghostscript, Poppler, LibreOffice or FFmpeg. See [Helper programs](https://github.com/DerKellerPotato/Converty#helper-programs) for how to install them on each system.
 
 The Windows and macOS builds are not code-signed. Windows SmartScreen and macOS Gatekeeper will warn the first time you open them; the [README](https://github.com/DerKellerPotato/Converty#install) explains how to continue.
 

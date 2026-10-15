@@ -144,6 +144,13 @@ pub fn kind_globs(kind: FileKind) -> (&'static str, &'static [&'static str]) {
             &["*.doc", "*.docx", "*.odt", "*.rtf", "*.xls", "*.xlsx", "*.ods", "*.csv", "*.ppt", "*.pptx", "*.odp"],
         ),
         FileKind::Html => ("Web pages", &["*.html", "*.htm"]),
+        FileKind::Video => (
+            "Videos",
+            &[
+                "*.mp4", "*.m4v", "*.mkv", "*.webm", "*.mov", "*.avi", "*.wmv", "*.flv", "*.mpg", "*.mpeg", "*.ts", "*.m2ts",
+                "*.mts", "*.3gp", "*.ogv", "*.MP4", "*.MKV", "*.MOV", "*.AVI",
+            ],
+        ),
         FileKind::Other => ("All files", &["*"]),
     }
 }

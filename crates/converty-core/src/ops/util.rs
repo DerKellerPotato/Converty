@@ -22,6 +22,7 @@ pub(crate) fn package_for(program: &str) -> &'static str {
         "gs" => "ghostscript",
         "pdftoppm" | "pdfimages" => "poppler-utils",
         "soffice" => "libreoffice",
+        "ffmpeg" | "ffprobe" => "ffmpeg",
         _ => "",
     }
 }
@@ -61,6 +62,27 @@ impl CmdOut {
 
 /// Runs a program, polling (2 ms growing to 100 ms) and killing it when `cancel` is set.
 pub(crate) fn run_cmd(program: &'static str, args: &[OsString], cancel: &AtomicBool) -> Result<CmdOut> {
+    run_cmd_inner(program, args, cancel, None)
+}
+
+/// Like [`run_cmd`], but hands every stdout line to `on_line` while the program runs
+/// (for programs that report progress, e.g. `ffmpeg -progress pipe:1`). The returned
+/// `stdout` is empty.
+pub(crate) fn run_cmd_lines(
+    program: &'static str,
+    args: &[OsString],
+    cancel: &AtomicBool,
+    on_line: &mut dyn FnMut(&str),
+) -> Result<CmdOut> {
+    run_cmd_inner(program, args, cancel, Some(on_line))
+}
+
+fn run_cmd_inner(
+    program: &'static str,
+    args: &[OsString],
+    cancel: &AtomicBool,
+    mut on_line: Option<&mut dyn FnMut(&str)>,
+) -> Result<CmdOut> {
     let exe = require(program)?;
     check(cancel)?;
     let mut cmd = Command::new(exe);
@@ -92,8 +114,32 @@ pub(crate) fn run_cmd(program: &'static str, args: &[OsString], cancel: &AtomicB
             buf
         })
     }
-    let out_h = drain(child.stdout.take());
+    let (out_h, lines) = if on_line.is_some() {
+        let (tx, rx) = std::sync::mpsc::channel::<String>();
+        let stdout = child.stdout.take();
+        let h = std::thread::spawn(move || {
+            use std::io::BufRead;
+            if let Some(r) = stdout {
+                for line in std::io::BufReader::new(r).lines().map_while(std::result::Result::ok) {
+                    if tx.send(line).is_err() {
+                        break;
+                    }
+                }
+            }
+            Vec::new()
+        });
+        (h, Some(rx))
+    } else {
+        (drain(child.stdout.take()), None)
+    };
     let err_h = drain(child.stderr.take());
+    let forward = |on_line: &mut Option<&mut dyn FnMut(&str)>| {
+        if let (Some(f), Some(rx)) = (on_line.as_mut(), &lines) {
+            for line in rx.try_iter() {
+                f(&line);
+            }
+        }
+    };
     // Short polls first: poppler calls for thumbnails finish within a few milliseconds.
     let mut wait = Duration::from_millis(2);
     let status = loop {
@@ -104,6 +150,7 @@ pub(crate) fn run_cmd(program: &'static str, args: &[OsString], cancel: &AtomicB
             let _ = err_h.join();
             return Err(Error::Cancelled);
         }
+        forward(&mut on_line);
         match child.try_wait()? {
             Some(s) => break s,
             None => {
@@ -114,6 +161,7 @@ pub(crate) fn run_cmd(program: &'static str, args: &[OsString], cancel: &AtomicB
     };
     let stdout = String::from_utf8_lossy(&out_h.join().unwrap_or_default()).into_owned();
     let stderr = String::from_utf8_lossy(&err_h.join().unwrap_or_default()).into_owned();
+    forward(&mut on_line);
     Ok(CmdOut { stdout, stderr, success: status.success() })
 }
 

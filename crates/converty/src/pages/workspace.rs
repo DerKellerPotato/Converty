@@ -352,6 +352,7 @@ impl App {
                 widget::container(widget::icon::from_name(match kind {
                     FileKind::Office => "x-office-document-symbolic",
                     FileKind::Html => "text-html-symbolic",
+                    FileKind::Video => "video-x-generic-symbolic",
                     _ => "application-pdf-symbolic",
                 }).size(32))
                 .center_x(Length::Fixed(60.0))

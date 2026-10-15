@@ -27,6 +27,8 @@ pub enum ToolOptions {
     Sign(SignOptions),
     Unlock,
     Protect(ProtectOptions),
+    ConvertVideo(ConvertVideoOptions),
+    VideoToAudio { format: AudioFormat },
 }
 
 impl ToolOptions {
@@ -52,6 +54,8 @@ impl ToolOptions {
             Tool::Sign => Self::Sign(SignOptions::default()),
             Tool::Unlock => Self::Unlock,
             Tool::Protect => Self::Protect(ProtectOptions::default()),
+            Tool::ConvertVideo => Self::ConvertVideo(ConvertVideoOptions::default()),
+            Tool::VideoToAudio => Self::VideoToAudio { format: AudioFormat::Mp3 },
         }
     }
 }
@@ -297,5 +301,54 @@ impl Default for ProtectOptions {
             owner_password: String::new(),
             permissions: Permissions { allow_print: true, allow_copy: true, allow_modify: false, allow_annotate: true },
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VideoFormat { Mp4, Mkv, Webm, Mov, Avi }
+impl VideoFormat {
+    pub const ALL: [VideoFormat; 5] = [Self::Mp4, Self::Mkv, Self::Webm, Self::Mov, Self::Avi];
+    pub fn ext(self) -> &'static str {
+        match self { Self::Mp4 => "mp4", Self::Mkv => "mkv", Self::Webm => "webm", Self::Mov => "mov", Self::Avi => "avi" }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VideoQuality {
+    /// Copy streams that fit the new container unchanged; re-encode the rest at high quality.
+    Original,
+    High,
+    Medium,
+    Small,
+}
+
+/// Maximum height of the result. Videos are never scaled up.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VideoResolution { Original, P1080, P720, P480 }
+impl VideoResolution {
+    pub fn max_height(self) -> Option<u32> {
+        match self { Self::Original => None, Self::P1080 => Some(1080), Self::P720 => Some(720), Self::P480 => Some(480) }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConvertVideoOptions {
+    pub format: VideoFormat,
+    pub quality: VideoQuality,
+    pub resolution: VideoResolution,
+    pub remove_audio: bool,
+}
+impl Default for ConvertVideoOptions {
+    fn default() -> Self {
+        Self { format: VideoFormat::Mp4, quality: VideoQuality::Original, resolution: VideoResolution::Original, remove_audio: false }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AudioFormat { Mp3, M4a, Wav, Flac, Opus }
+impl AudioFormat {
+    pub const ALL: [AudioFormat; 5] = [Self::Mp3, Self::M4a, Self::Wav, Self::Flac, Self::Opus];
+    pub fn ext(self) -> &'static str {
+        match self { Self::Mp3 => "mp3", Self::M4a => "m4a", Self::Wav => "wav", Self::Flac => "flac", Self::Opus => "opus" }
     }
 }

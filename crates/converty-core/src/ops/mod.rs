@@ -9,6 +9,7 @@ pub(crate) mod pdfdoc;
 mod security;
 mod stamp;
 pub(crate) mod util;
+mod video;
 
 pub(crate) fn poppler_source(
     input: &Path,
@@ -173,6 +174,8 @@ fn dispatch(ctx: &mut Ctx<'_>) -> Result<()> {
         (ToolOptions::Sign(o), Tool::Sign) => stamp::sign(ctx, o),
         (ToolOptions::Unlock, Tool::Unlock) => security::unlock(ctx),
         (ToolOptions::Protect(o), Tool::Protect) => security::protect(ctx, o),
+        (ToolOptions::ConvertVideo(o), Tool::ConvertVideo) => video::convert_video(ctx, o),
+        (ToolOptions::VideoToAudio { format }, Tool::VideoToAudio) => video::video_to_audio(ctx, *format),
         _ => Err(mismatch(tool)),
     }
 }

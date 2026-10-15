@@ -20,13 +20,15 @@ impl DepStatus {
     }
 }
 
-/// Looks up gs, pdftoppm, pdfimages and soffice on PATH (also inside Flatpak: /app/bin).
+/// Looks up gs, pdftoppm, pdfimages, soffice, ffmpeg and ffprobe on PATH (also inside Flatpak: /app/bin).
 pub fn deps() -> DepStatus {
-    const WANTED: [(&str, &str); 4] = [
+    const WANTED: [(&str, &str); 6] = [
         ("gs", "ghostscript"),
         ("pdftoppm", "poppler-utils"),
         ("pdfimages", "poppler-utils"),
         ("soffice", "libreoffice"),
+        ("ffmpeg", "ffmpeg"),
+        ("ffprobe", "ffmpeg"),
     ];
     DepStatus {
         deps: WANTED
@@ -87,6 +89,15 @@ fn platform_candidates(program: &str) -> Vec<std::path::PathBuf> {
             }
         }
         "soffice" => out.extend(roots.iter().map(|r| r.join("LibreOffice").join("program").join("soffice.exe"))),
+        "ffmpeg" | "ffprobe" => {
+            // winget (Gyan.FFmpeg) links into WinGet\Links; manual installs usually unpack to C:\ffmpeg.
+            let exe = format!("{program}.exe");
+            if let Some(local) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+                out.push(local.join("Microsoft").join("WinGet").join("Links").join(&exe));
+            }
+            out.extend(roots.iter().map(|r| r.join("ffmpeg").join("bin").join(&exe)));
+            out.push(PathBuf::from(r"C:\ffmpeg\bin").join(&exe));
+        }
         _ => {
             // Poppler for Windows is unpacked anywhere; check a few common places.
             let exe = format!("{program}.exe");

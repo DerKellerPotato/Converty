@@ -23,6 +23,7 @@ pub fn category_color(t: &cosmic::Theme, c: Category) -> Color {
         Category::ConvertFromPdf => p.accent_purple,
         Category::Edit => p.accent_red,
         Category::Security => p.accent_warm_grey,
+        Category::Video => p.accent_pink,
     };
     c.into()
 }

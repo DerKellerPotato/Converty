@@ -11,6 +11,8 @@ pub enum FileKind {
     Office,
     /// html, htm
     Html,
+    /// mp4, m4v, mkv, webm, mov, avi, wmv, flv, mpg, mpeg, ts, m2ts, mts, 3gp, ogv
+    Video,
     Other,
 }
 
@@ -23,6 +25,9 @@ impl FileKind {
             "jpg" | "jpeg" | "png" | "webp" | "tif" | "tiff" | "bmp" | "gif" => FileKind::Image,
             "doc" | "docx" | "odt" | "rtf" | "xls" | "xlsx" | "ods" | "csv" | "ppt" | "pptx" | "odp" => FileKind::Office,
             "html" | "htm" => FileKind::Html,
+            "mp4" | "m4v" | "mkv" | "webm" | "mov" | "avi" | "wmv" | "flv" | "mpg" | "mpeg" | "ts" | "m2ts" | "mts" | "3gp" | "ogv" => {
+                FileKind::Video
+            }
             _ => FileKind::Other,
         }
     }

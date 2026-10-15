@@ -31,6 +31,8 @@ pub fn action_label(tool: Tool) -> &'static str {
         Tool::Sign => "Sign",
         Tool::Unlock => "Unlock",
         Tool::Protect => "Protect",
+        Tool::ConvertVideo => "Convert video",
+        Tool::VideoToAudio => "Extract audio",
     }
 }
 
@@ -55,5 +57,7 @@ pub fn tool_suffix(tool: Tool) -> &'static str {
         Tool::Sign => "signed",
         Tool::Unlock => "unlocked",
         Tool::Protect => "protected",
+        Tool::ConvertVideo => "converted",
+        Tool::VideoToAudio => "audio",
     }
 }

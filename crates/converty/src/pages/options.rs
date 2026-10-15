@@ -29,6 +29,10 @@ pub enum SegKey {
     WmAngle,
     SignKind,
     SignPage,
+    VideoFormat,
+    VideoQuality,
+    VideoRes,
+    AudioFormat,
 }
 
 #[derive(Debug, Clone)]
@@ -71,11 +75,15 @@ pub enum OptMsg {
     Perm(u8, bool),
     OutputStem(String),
     ChooseImage(FilePickTarget),
+    VideoRemoveAudio(bool),
 }
 
 const TEMPLATES: [&str; 4] = ["{n}", "Page {n}", "Page {n} of {p}", "{n} / {p}"];
 const PN_MARGINS: [f32; 3] = [16.0, 28.0, 44.0];
 const WM_ANGLES: [f32; 3] = [0.0, 45.0, 90.0];
+const VIDEO_QUALITIES: [VideoQuality; 4] = [VideoQuality::Original, VideoQuality::High, VideoQuality::Medium, VideoQuality::Small];
+const VIDEO_RESOLUTIONS: [VideoResolution; 4] =
+    [VideoResolution::Original, VideoResolution::P1080, VideoResolution::P720, VideoResolution::P480];
 
 impl Workspace {
     /// (Re)creates the segmented-control models from the current options.
@@ -156,6 +164,12 @@ impl Workspace {
                     },
                 );
             }
+            ToolOptions::ConvertVideo(o) => {
+                put(K::VideoFormat, &["MP4", "MKV", "WebM", "MOV", "AVI"], o.format as usize);
+                put(K::VideoQuality, &["Original", "High", "Medium", "Small"], o.quality as usize);
+                put(K::VideoRes, &["Original", "1080p", "720p", "480p"], o.resolution as usize);
+            }
+            ToolOptions::VideoToAudio { format } => put(K::AudioFormat, &["MP3", "M4A", "WAV", "FLAC", "Opus"], *format as usize),
             _ => {}
         }
     }
@@ -208,6 +222,10 @@ impl Workspace {
                     SignatureKind::Image { path: Default::default() }
                 }
             }
+            (ToolOptions::ConvertVideo(o), SegKey::VideoFormat) => o.format = VideoFormat::ALL[i.min(4)],
+            (ToolOptions::ConvertVideo(o), SegKey::VideoQuality) => o.quality = VIDEO_QUALITIES[i.min(3)],
+            (ToolOptions::ConvertVideo(o), SegKey::VideoRes) => o.resolution = VIDEO_RESOLUTIONS[i.min(3)],
+            (ToolOptions::VideoToAudio { format }, _) => *format = AudioFormat::ALL[i.min(4)],
             (ToolOptions::Sign(o), SegKey::SignPage) => {
                 o.page = match i {
                     0 => 0,
@@ -318,6 +336,7 @@ impl Workspace {
                 2 => o.permissions.allow_modify = b,
                 _ => o.permissions.allow_annotate = b,
             },
+            (O::VideoRemoveAudio(b), ToolOptions::ConvertVideo(o)) => o.remove_audio = b,
             (O::OutputStem(t), _) => {
                 self.output_stem = t;
                 self.stem_edited = true;
@@ -772,6 +791,40 @@ impl App {
                         ),
                     )
                     .push(widget::text::caption("Passwords are never saved by Converty."));
+            }
+            ToolOptions::ConvertVideo(o) => {
+                col = col
+                    .push(labelled("Convert to", self.segmented(ws, SegKey::VideoFormat)))
+                    .push(widget::text::caption(match o.format {
+                        VideoFormat::Mp4 => "Plays almost everywhere: phones, TVs, browsers.",
+                        VideoFormat::Mkv => "Keeps every audio and subtitle track.",
+                        VideoFormat::Webm => "Made for the web. Encoding takes a while.",
+                        VideoFormat::Mov => "For Apple devices and video editors.",
+                        VideoFormat::Avi => "For old players. Keeps one audio track, no subtitles.",
+                    }))
+                    .push(labelled("Quality", self.segmented(ws, SegKey::VideoQuality)))
+                    .push(widget::text::caption(match o.quality {
+                        VideoQuality::Original => "Copies the picture unchanged when it fits the new format. Fast and lossless.",
+                        VideoQuality::High => "Re-encodes with hardly any visible loss.",
+                        VideoQuality::Medium => "Re-encodes to a clearly smaller file.",
+                        VideoQuality::Small => "Smallest file. Fine details get soft.",
+                    }))
+                    .push(labelled("Resolution", self.segmented(ws, SegKey::VideoRes)))
+                    .push(widget::text::caption("Smaller videos are never scaled up."))
+                    .push(toggle("Remove the sound", o.remove_audio, OptMsg::VideoRemoveAudio))
+                    .push(widget::text::caption("Converted with FFmpeg on this computer."));
+            }
+            ToolOptions::VideoToAudio { format } => {
+                col = col
+                    .push(labelled("Save as", self.segmented(ws, SegKey::AudioFormat)))
+                    .push(widget::text::caption(match format {
+                        AudioFormat::Mp3 => "Plays everywhere.",
+                        AudioFormat::M4a => "AAC audio, as used by Apple devices.",
+                        AudioFormat::Wav => "Uncompressed, large files.",
+                        AudioFormat::Flac => "Lossless and smaller than WAV.",
+                        AudioFormat::Opus => "Very small files at good quality.",
+                    }))
+                    .push(widget::text::caption("When the sound is already in this format it is copied unchanged."));
             }
         }
         col.into()
